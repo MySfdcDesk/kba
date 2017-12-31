@@ -1,0 +1,57 @@
+trigger MasterFinancialDataTrigger on Financial_Data__c (before insert,after insert,
+                                                         before update,after update,
+                                                         before delete,after delete,
+                                                         after undelete) {
+                                                             
+                                                             List<Financial_Data__c> newTriggerList = new List<Financial_Data__c>();
+                                                             List<Financial_Data__c> oldTriggerList = new List<Financial_Data__c>();
+                                                             Map<Id,Financial_Data__c> newTriggerMap = new Map<Id,Financial_Data__c>();
+                                                             Map<Id,Financial_Data__c> oldTriggerMap = new Map<Id,Financial_Data__c>();
+                                                             
+                                                             
+                                                             //The before actions XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                                                             if(Trigger.isBefore) {
+                                                                 
+                                                                 //Trigger before Insert
+                                                                 if(Trigger.isInsert){
+                                                                     
+                                                                 }
+                                                                 
+                                                                 //Trigger before Update
+                                                                 if(Trigger.isUpdate) {}
+                                                                 
+                                                                 //Trigger before Delete
+                                                                 if(Trigger.isDelete){}
+                                                                 
+                                                             }                                                             
+                                                             
+                                                             
+                                                             
+                                                             //The After actions XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                                                             if(Trigger.isAfter){
+                                                                 
+                                                                 //Trigger after Insert xxxxxxxxxxxxxxxxxxxxxxxx
+                                                                 if(Trigger.isInsert){
+                                                                     FinancialDataHandler fdh = new FinancialDataHandler(trigger.new,trigger.old,trigger.newMap,trigger.oldMap);
+                                                                     fdh.copyDataOnInsertOrUpdate();                                                                     
+                                                                 }
+                                                                 
+                                                                 //Trigger after Update xxxxxxxxxxxxxxxxxxxxxxxx
+                                                                 if(Trigger.isUpdate){
+                                                                     FinancialDataHandler fdh = new FinancialDataHandler(trigger.new,trigger.old,trigger.newMap,trigger.oldMap);
+                                                                     fdh.copyDataOnInsertOrUpdate();   
+                                                                 }
+                                                                 
+                                                                 //Trigger after Delete xxxxxxxxxxxxxxxxxxxxxxxx
+                                                                 if(Trigger.isDelete){
+                                                                     FinancialDataHandler fdh = new FinancialDataHandler(trigger.new,trigger.old,trigger.newMap,trigger.oldMap);
+                                                                     fdh.copyDataOnDelete();                                                                     
+                                                                 }
+                                                                 
+                                                                 //Trigger after Undelete xxxxxxxxxxxxxxxxxxxxxx
+                                                                 if(Trigger.isUndelete) {
+                                                                     FinancialDataHandler fdh = new FinancialDataHandler(trigger.new,trigger.old,trigger.newMap,trigger.oldMap);
+                                                                     fdh.copyDataOnInsertOrUpdate();    
+                                                                 }
+                                                             }    
+                                                         }
