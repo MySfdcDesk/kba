@@ -120,8 +120,6 @@ public class FinancialDataHandler {
 //go into the loop and create duplicate Accounts to be updated.
 //The list accts2Update should contain only one Account
 
-
-        
         for(Financial_Data__c ff : oldFDList) {
             Financial_Data__c newFd = fdMap.get(ff.Account__c);
             if(newFd != null) {
