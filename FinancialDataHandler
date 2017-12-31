@@ -1,13 +1,13 @@
 public class FinancialDataHandler {
     //These variables store the the trigger lists and trigger maps
     //Author: Michael Haase
-    List<Financial_Data__c> newFdList = new List<Financial_Data__c>();
-    List<Financial_Data__c> oldFdList = new List<Financial_Data__c>();
+    List<Financial_Data__c> newFdList  = new List<Financial_Data__c>();
+    List<Financial_Data__c> oldFdList  = new List<Financial_Data__c>();
     Map<Id,Financial_Data__c> newFdMap = new map<Id,Financial_Data__c>();
     Map<Id,Financial_Data__c> oldFdMap = new Map<Id,Financial_Data__c>();
     
-    Set<Id> fdIds = new set<Id>();
     Set<Id> fdAcctIds = new set<Id>();
+    Set<Id> fdIds = new Set<Id>();
     List<Account> accts2Update = new List<Account>();
     
     
@@ -30,53 +30,52 @@ public class FinancialDataHandler {
         for(Financial_data__c f : newFdList) {
             fdAcctIds.add(f.Account__c);
         }
+
         
-        Map<Id,Account> acctMap = new Map<Id,Account>();
-        //Get all Accounts with related Financial Data records
-        //By Sorting Financial Data records by Year Ascending and Limiting it to 1
-        //We make sure we  
-        List<Account> aList = [Select id,Name,
-                               Year_Sheetfed_Service_Financial_Data__c,
-                               Annual_Revenue_Agency_Parts__c,
-                               Annual_Revenue_Agency_Press_Consum_sf__c,
-                               Annual_Revenue_Agency_Service__c,
-                               Nbr_Fin_Data_Sheetfed_Service__c,
-                               Segmentation_sf__c,
-                               (Select Id,
-                                Annual_Revenue_Agency_Parts__c,
-                                Annual_Revenue_Agency_Press_Consum__c,
-                                Annual_Revenue_Agency_Service__c,
-                                Segmentation__c,
-                                Year__c 
-                                From Financial_Data__r
-                                Where Business_Area__c = 'Sheetfed - Service' AND RecordType.DeveloperName = 'Business_Unit_Data'
-                                Order By Year__c ASC
-                                Limit 1)
-                               From Account
-                               Where Nbr_Fin_Data_Sheetfed_Service__c != null AND  Id IN :fdAcctIds];
+        //Search for all existing Financial_Data records
+        //If there was no financial data record found, set the Financial Data  fields on the Account record
+        //that is related to the old Financial Data record to null
         
-        for(Account a : aList) {
-            acctMap.put(a.Id,a);
+        List<Financial_Data__c> currentFdList = [Select Id,
+                                                 Annual_Revenue_Agency_Parts__c,
+                                                 Annual_Revenue_Agency_Press_Consum__c,
+                                                 Annual_Revenue_Agency_Service__c,
+                                                 Segmentation__c,
+                                                 Year__c,
+                                                 Account__c, 
+                                                 Account__r.Name,
+                                                 Account__r.Year_Sheetfed_Service_Financial_Data__c,
+                                                 Account__r.Annual_Revenue_Agency_Parts__c,
+                                                 Account__r.Annual_Revenue_Agency_Press_Consum_sf__c,
+                                                 Account__r.Annual_Revenue_Agency_Service__c,
+                                                 Account__r.Segmentation_sf__c 
+                                                 From Financial_Data__c 
+                                                Where Account__c IN :fdAcctIds
+                                                Order By Year__c ASC
+                                                Limit 1];
+        
+
+        
+        Map<Id,Financial_Data__c> fdMap = new Map<Id,Financial_Data__c>();
+        for(Financial_Data__c f : currentFdList) {
+            fdMap.put(f.Account__c,f);
         }
+
         
-        List<Account> newAcctList = new List<Account>();
-        
-        for(Account ac : aList) {
-            Account na = acctMap.get(ac.Id);
-            if(na.Nbr_Fin_Data_Sheetfed_Service__c != null) {
-                for(Financial_Data__c fd : na.Financial_Data__r) {
-                    Account a = new Account();
-                    a.Id = na.Id;
-                    a.Year_Sheetfed_Service_Financial_Data__c = fd.Year__c;
-                    a.Annual_Revenue_Agency_Parts__c = fd.Annual_Revenue_Agency_Parts__c;
-                    a.Annual_Revenue_Agency_Press_Consum_sf__c = fd.Annual_Revenue_Agency_Press_Consum__c;
-                    a.Annual_Revenue_Agency_Service__c = fd.Annual_Revenue_Agency_Service__c;
-                    a.Segmentation_sf__c = fd.Segmentation__c;
-                    newAcctList.add(a);
-                }
-            }   
+        for(Financial_Data__c ff : currentFdList) {
+            Financial_Data__c newFd = fdMap.get(ff.Account__c);
+            if(newFd != null) {
+                Account a = new Account();
+                a.Id = newFd.Account__r.Id;
+                a.Year_Sheetfed_Service_Financial_Data__c = newFd.Year__c;
+                a.Annual_Revenue_Agency_Parts__c = newFd.Annual_Revenue_Agency_Parts__c;
+                a.Annual_Revenue_Agency_Press_Consum_sf__c = newFd.Annual_Revenue_Agency_Press_Consum__c;
+                a.Annual_Revenue_Agency_Service__c = newFd.Annual_Revenue_Agency_Service__c;
+                a.Segmentation_sf__c = newFd.Segmentation__c; 
+                accts2Update.add(a);
+            }  
         }
-        update newAcctList;        
+        update accts2Update;      
     }
     
     
@@ -86,61 +85,65 @@ public class FinancialDataHandler {
         for(Financial_data__c f : oldFdList) {
             fdAcctIds.add(f.Account__c);
         }
+
         
+        //Search for all existing Financial_Data records
+        //If there was no financial data record found, set the Financial Data  fields on the Account record
+        //that is related to the old Financial Data record to null
         
-        Map<Id,Account> acctMap = new Map<Id,Account>();
+        List<Financial_Data__c> currentFdList = [Select Id,
+                                                 Annual_Revenue_Agency_Parts__c,
+                                                 Annual_Revenue_Agency_Press_Consum__c,
+                                                 Annual_Revenue_Agency_Service__c,
+                                                 Segmentation__c,
+                                                 Year__c,
+                                                 Account__c, 
+                                                 Account__r.Name,
+                                                 Account__r.Year_Sheetfed_Service_Financial_Data__c,
+                                                 Account__r.Annual_Revenue_Agency_Parts__c,
+                                                 Account__r.Annual_Revenue_Agency_Press_Consum_sf__c,
+                                                 Account__r.Annual_Revenue_Agency_Service__c,
+                                                 Account__r.Segmentation_sf__c 
+                                                 From Financial_Data__c 
+                                                Where Account__c IN :fdAcctIds
+                                                Order By Year__c ASC
+                                                Limit 1];
+
+
         
-        List<Account> aList = [Select id,Name,
-                               Year_Sheetfed_Service_Financial_Data__c,
-                               Annual_Revenue_Agency_Parts__c,
-                               Annual_Revenue_Agency_Press_Consum_sf__c,
-                               Annual_Revenue_Agency_Service__c,
-                               Nbr_Fin_Data_Sheetfed_Service__c,
-                               (Select Id,
-                                Annual_Revenue_Agency_Parts__c,
-                                Annual_Revenue_Agency_Press_Consum__c,
-                                Annual_Revenue_Agency_Service__c,
-                                Segmentation__c,
-                                Year__c 
-                                From Financial_Data__r
-                                Where Business_Area__c = 'Sheetfed - Service' AND RecordType.DeveloperName = 'Business_Unit_Data'
-                                Order By Year__c ASC
-                                Limit 1)
-                               From Account
-                               Where Nbr_Fin_Data_Sheetfed_Service__c != null AND  Id IN :fdAcctIds];
-        
-        
-        for(Account a : aList) {
-            acctMap.put(a.Id,a);
+        Map<Id,Financial_Data__c> fdMap = new Map<Id,Financial_Data__c>();
+        for(Financial_Data__c f : currentFdList) {
+            fdMap.put(f.Account__c,f);
         }
+
+//We have the problem that on bulk delete several Financial Records (contained in oldFdList) related to the same Account
+//go into the loop and create duplicate Accounts to be updated.
+//The list accts2Update should contain only one Account
+
+
         
-        List<Account> newAcctList = new List<Account>();
-        
-        for(Account ac : aList) {
-            Account na = acctMap.get(ac.Id);
-            if(na != null && na.Nbr_Fin_Data_Sheetfed_Service__c == 1) {
+        for(Financial_Data__c ff : oldFDList) {
+            Financial_Data__c newFd = fdMap.get(ff.Account__c);
+            if(newFd != null) {
                 Account a = new Account();
-                a.Id = na.Id;
+                a.Id = newFd.Account__r.Id;
+                a.Year_Sheetfed_Service_Financial_Data__c = newFd.Year__c;
+                a.Annual_Revenue_Agency_Parts__c = newFd.Annual_Revenue_Agency_Parts__c;
+                a.Annual_Revenue_Agency_Press_Consum_sf__c = newFd.Annual_Revenue_Agency_Press_Consum__c;
+                a.Annual_Revenue_Agency_Service__c = newFd.Annual_Revenue_Agency_Service__c;
+                a.Segmentation_sf__c = newFd.Segmentation__c; 
+                accts2Update.add(a);
+            } else if (newFd == null) {
+                Account a = new Account();
+                a.Id = ff.Account__c;
                 a.Year_Sheetfed_Service_Financial_Data__c = '';
                 a.Annual_Revenue_Agency_Parts__c = 0;
                 a.Annual_Revenue_Agency_Press_Consum_sf__c = 0;
                 a.Annual_Revenue_Agency_Service__c = 0;
-                a.Segmentation_sf__c = '';
-                newAcctList.add(a);
-            } 
-            else if(na != null && na.Nbr_Fin_Data_Sheetfed_Service__c > 1) {   
-                for(Financial_Data__c fd : na.Financial_Data__r) {
-                    Account a = new Account();
-                    a.Id = na.Id;
-                    a.Year_Sheetfed_Service_Financial_Data__c = fd.Year__c;
-                    a.Annual_Revenue_Agency_Parts__c = fd.Annual_Revenue_Agency_Parts__c;
-                    a.Annual_Revenue_Agency_Press_Consum_sf__c = fd.Annual_Revenue_Agency_Press_Consum__c;
-                    a.Annual_Revenue_Agency_Service__c = fd.Annual_Revenue_Agency_Service__c;
-                    a.Segmentation_sf__c = fd.Segmentation__c;
-                    newAcctList.add(a);
-                }
-            }   
-        } 
-        update newAcctList;        
+                a.Segmentation_sf__c = ''; 
+                accts2Update.add(a);                
+            }
+        }
+        update accts2Update;
     }
 }
