@@ -1,0 +1,147 @@
+public class FinancialDataHandler {
+    //These variables store the the trigger lists and trigger maps
+    //Author: Michael Haase
+    List<Financial_Data__c> newFdList  = new List<Financial_Data__c>();
+    List<Financial_Data__c> oldFdList  = new List<Financial_Data__c>();
+    Map<Id,Financial_Data__c> newFdMap = new map<Id,Financial_Data__c>();
+    Map<Id,Financial_Data__c> oldFdMap = new Map<Id,Financial_Data__c>();
+    
+    Set<Id> fdAcctIds = new set<Id>();
+    Set<Id> fdIds = new Set<Id>();
+    List<Account> accts2Update = new List<Account>();
+    
+    
+    //Constructor
+    public FinancialDataHandler(List<Financial_Data__c> newTriggerList,
+                                List<Financial_Data__c> oldTriggerList,
+                                Map<Id,Financial_Data__c> newTriggerMap,
+                                Map<Id,Financial_Data__c> oldTriggerMap) {
+                                    newFdList = newTriggerList;
+                                    oldFdList = oldTriggerList;
+                                    newFdmap = newTriggerMap;
+                                    oldFdMap = oldTriggerMap;
+                                }
+    
+    
+    
+    //Method on Insert OR on Update**********************************************
+    public void copyDataOnInsertOrUpdate() {
+        // Here we are working with data from Trigger.new
+        for(Financial_data__c f : newFdList) {
+            fdAcctIds.add(f.Account__c);
+        }
+
+        
+        //Search for all existing Financial_Data records
+        //If there was no financial data record found, set the Financial Data  fields on the Account record
+        //that is related to the old Financial Data record to null
+        
+        List<Financial_Data__c> currentFdList = [Select Id,
+                                                 Annual_Revenue_Agency_Parts__c,
+                                                 Annual_Revenue_Agency_Press_Consum__c,
+                                                 Annual_Revenue_Agency_Service__c,
+                                                 Segmentation__c,
+                                                 Year__c,
+                                                 Account__c, 
+                                                 Account__r.Name,
+                                                 Account__r.Year_Sheetfed_Service_Financial_Data__c,
+                                                 Account__r.Annual_Revenue_Agency_Parts__c,
+                                                 Account__r.Annual_Revenue_Agency_Press_Consum_sf__c,
+                                                 Account__r.Annual_Revenue_Agency_Service__c,
+                                                 Account__r.Segmentation_sf__c 
+                                                 From Financial_Data__c 
+                                                Where Account__c IN :fdAcctIds
+                                                Order By Year__c ASC
+                                                Limit 1];
+        
+
+        
+        Map<Id,Financial_Data__c> fdMap = new Map<Id,Financial_Data__c>();
+        for(Financial_Data__c f : currentFdList) {
+            fdMap.put(f.Account__c,f);
+        }
+
+        
+        for(Financial_Data__c ff : currentFdList) {
+            Financial_Data__c newFd = fdMap.get(ff.Account__c);
+            if(newFd != null) {
+                Account a = new Account();
+                a.Id = newFd.Account__r.Id;
+                a.Year_Sheetfed_Service_Financial_Data__c = newFd.Year__c;
+                a.Annual_Revenue_Agency_Parts__c = newFd.Annual_Revenue_Agency_Parts__c;
+                a.Annual_Revenue_Agency_Press_Consum_sf__c = newFd.Annual_Revenue_Agency_Press_Consum__c;
+                a.Annual_Revenue_Agency_Service__c = newFd.Annual_Revenue_Agency_Service__c;
+                a.Segmentation_sf__c = newFd.Segmentation__c; 
+                accts2Update.add(a);
+            }  
+        }
+        update accts2Update;      
+    }
+    
+    
+    //Method on Delete********************************************
+    public void copyDataOnDelete() {
+        
+        for(Financial_data__c f : oldFdList) {
+            fdAcctIds.add(f.Account__c);
+        }
+
+        
+        //Search for all existing Financial_Data records
+        //If there was no financial data record found, set the Financial Data  fields on the Account record
+        //that is related to the old Financial Data record to null
+        
+        List<Financial_Data__c> currentFdList = [Select Id,
+                                                 Annual_Revenue_Agency_Parts__c,
+                                                 Annual_Revenue_Agency_Press_Consum__c,
+                                                 Annual_Revenue_Agency_Service__c,
+                                                 Segmentation__c,
+                                                 Year__c,
+                                                 Account__c, 
+                                                 Account__r.Name,
+                                                 Account__r.Year_Sheetfed_Service_Financial_Data__c,
+                                                 Account__r.Annual_Revenue_Agency_Parts__c,
+                                                 Account__r.Annual_Revenue_Agency_Press_Consum_sf__c,
+                                                 Account__r.Annual_Revenue_Agency_Service__c,
+                                                 Account__r.Segmentation_sf__c 
+                                                 From Financial_Data__c 
+                                                Where Account__c IN :fdAcctIds
+                                                Order By Year__c ASC
+                                                Limit 1];
+
+
+        
+        Map<Id,Financial_Data__c> fdMap = new Map<Id,Financial_Data__c>();
+        for(Financial_Data__c f : currentFdList) {
+            fdMap.put(f.Account__c,f);
+        }
+
+//We have the problem that on bulk delete several Financial Records will
+
+
+        
+        for(Financial_Data__c ff : oldFDList) {
+            Financial_Data__c newFd = fdMap.get(ff.Account__c);
+            if(newFd != null) {
+                Account a = new Account();
+                a.Id = newFd.Account__r.Id;
+                a.Year_Sheetfed_Service_Financial_Data__c = newFd.Year__c;
+                a.Annual_Revenue_Agency_Parts__c = newFd.Annual_Revenue_Agency_Parts__c;
+                a.Annual_Revenue_Agency_Press_Consum_sf__c = newFd.Annual_Revenue_Agency_Press_Consum__c;
+                a.Annual_Revenue_Agency_Service__c = newFd.Annual_Revenue_Agency_Service__c;
+                a.Segmentation_sf__c = newFd.Segmentation__c; 
+                accts2Update.add(a);
+            } else if (newFd == null) {
+                Account a = new Account();
+                a.Id = ff.Account__c;
+                a.Year_Sheetfed_Service_Financial_Data__c = '';
+                a.Annual_Revenue_Agency_Parts__c = 0;
+                a.Annual_Revenue_Agency_Press_Consum_sf__c = 0;
+                a.Annual_Revenue_Agency_Service__c = 0;
+                a.Segmentation_sf__c = ''; 
+                accts2Update.add(a);                
+            }
+        }
+        update accts2Update;
+    }
+}
